@@ -13,28 +13,7 @@ session_start();
 
  $server = new League\OAuth1\Client\Server\Bitbucket($oauth_params);
 
- if (array_key_exists('issue_id', $_POST) && is_ajax()) {
-
-     $issue_id = $_POST["issue_id"];
-     $issue_id = $issue_id + 0;
-
-     $oauth_params = array_merge(unserialize($_SESSION['bb_credentials']), array(
-         'oauth_consumer_key'        => $oauth_params['identifier'],
-         'oauth_consumer_secret'     => $oauth_params['secret'],
-         'oauth_callback'            => $oauth_params['callback_uri'],
-     ));
-
-     $bitbucket = new \Bitbucket\API\Api();
-     $bitbucket->getClient()->addListener(
-         new \Bitbucket\API\Http\Listener\OAuthListener($oauth_params)
-     );
-
-     //ISSUES COMMENT DETAIL
-     $issues = $bitbucket->api('Repositories\Issues');
-     $comment = json_decode($issues->comments()->all('fecron', 'mapfre-soporte', $issue_id)->getContent(), true);
-     echo json_encode($comment);
-
- } elseif (array_key_exists('profile', $_GET)) {
+ if (array_key_exists('profile', $_GET)) {
      if (false === array_key_exists('bb_credentials', $_SESSION)) {
          header('Location: ' . $oauth_params['callback_uri']);
          exit;
@@ -60,21 +39,9 @@ session_start();
     $issues = $bitbucket->api('Repositories\Issues');
     $issues_json = json_decode($issues->all('fecron', 'mapfre-soporte',array('limit' => 50, 'start' => 0))->getContent(), true);
 
-    //informes de los comentarios
-    $coments_relevants = [];
-    $palabra_clave_informe = '# Hilo Principal #';
-    foreach($issues_json["issues"] as $issue){
-         $comments = json_decode($issues->comments()->all('fecron', 'mapfre-soporte', $issue["local_id"])->getContent(), true);
-         //cambiar por while
-         foreach($comments as $comment){
-             if(strpos($comment["content"], $palabra_clave_informe) !== false){
-                 $coments_relevants[$issue["local_id"]]["content"]= $comment["content"];
-             }
-         }
-    }
-    wrapComentsRelevants($coments_relevants);
-
-    $HTMLIssuesGlobal =  getHTMLIssuesGlobal($issues_json,$coments_relevants);
+    $comment = json_decode($issues->comments()->all('fecron', 'mapfre-soporte', 328)->getContent(), true);
+    var_dump($comment);
+    $HTMLIssuesGlobal =  getHTMLIssuesGlobal($issues_json);
 
     //VISTA
     ?>
@@ -87,7 +54,6 @@ session_start();
       <meta http-equiv="X-UA-Compatible" content="ie=edge">
       <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
       <link rel="stylesheet" href="./public/css/app.css" />
-      <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
       <title>Espia :D</title>
     </head>
     <body>
